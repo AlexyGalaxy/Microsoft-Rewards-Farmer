@@ -1055,9 +1055,9 @@ try:
             prGreen('[POINTS] You have ' + str(POINTS_COUNTER) + ' points on your account !')
 
             browser.get('https://account.microsoft.com/')
-            waitUntilVisible(browser, By.XPATH, '//*[@id="navs"]/div/div/div/div/div[4]/a', 20)
+            waitUntilVisible(browser, By.XPATH, '//*[@id="navs"]/div/div/div/div/div[4]/div/button/span/i', 20)
 
-            if browser.find_element(By.XPATH, '//*[@id="navs"]/div/div/div/div/div[4]/a').get_attribute('target') == '_blank':
+            if browser.find_element(By.XPATH, '//*[@id="navs"]/div/div/div/div/div[4]/div/button/span/i').get_attribute('target') == '_blank':
                 BASE_URL = 'https://rewards.microsoft.com'
                 browser.find_element(By.XPATH, '//*[@id="navs"]/div/div/div/div/div[4]/a').click()
                 time.sleep(2)
