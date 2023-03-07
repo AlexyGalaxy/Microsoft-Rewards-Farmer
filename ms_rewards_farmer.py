@@ -17,9 +17,8 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementNotInteractableException, UnexpectedAlertPresentException, NoAlertPresentException
 
 # Define user-agents
-#rewardsErr ='C://Users//YourNameHere//Desktop//Microsoft.Rewards.Err.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsErr
-#rewardsLog = 'C://Users//YourNameHere//Desktop//Microsoft.Rewards.Log.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsLog 
-
+rewardsErr ='/home/rakosi2/Microsoft-Rewards-Farmer/Microsoft.Rewards.Err.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsErr
+rewardsLog = '/home/rakosi2/Microsoft-Rewards-Farmer/Microsoft.Rewards.Log.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsLog 
 PC_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36 Edg/86.0.622.63'
 MOBILE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; Pixel 3) zAppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0. 3945.79 Mobile Safari/537.36'
 PROTECTACCPAUSE = False #Set this variable to True to pause the script when you need to verify Account infomation.("Help us protect Your Account") Tip- disable headless mode when you set this to True
@@ -1750,5 +1749,5 @@ finally :
     prPurple('\n\n[INFO] MS Farmer Total Time Elapsed: ' + time.strftime("%H:%M:%S", time.gmtime(TOTAL_TIME)) + '\n')
     prYellow('[INFO] Thank you for using Microsoft Rewards Farmer ! ')
     prYellow('[INFO] Press Any Key to Exit !')
-    input() #comment out or delete this line to auto exit when complete. ([WARNING] You will not see errors without this line !)
+#    input() #comment out or delete this line to auto exit when complete. ([WARNING] You will not see errors without this line !)
     prPurple('[INFO] Have a Good Day! GoodBye :)\n')
