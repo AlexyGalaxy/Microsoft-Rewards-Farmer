@@ -31,6 +31,7 @@ FIRST_RUN = True
 FIRST_RUN_M = True
 ACCOUNTISSUE = False
 PROTECTISSUE = False
+SECURITYCHECK = False # Delete after automation
 COMPLETESEARCH = 0
 RETRYING = False
 RETRYINGM = False
@@ -63,6 +64,21 @@ def browserSetup(headless_mode: bool = False, user_agent: str = PC_USER_AGENT) -
         writeErr()
         FA.write('\n[ERROR] An Error has Occured While Trying to Complete Browser Setup.\n')
         FA.close()
+
+def pageNotWorking(browser: webdriver) :
+    try :
+        noLoad = str(browser.find_element(By.XPATH, '//*[@id="main-message"]/h1/span').get_attribute('innerHTML'))
+        if noLoad.startswith("This page isn't"):
+            while noLoad.startswith("This page isn't"):
+                    prYellow('[INFO] Could Not Load Page. Refreshing Now...')
+                    browser.refresh()
+                    time.sleep(5)
+    except :
+        prRed('\n[ERROR] An Error has Occured While Trying to Reload Current Page.\n')
+        writeErr()
+        FA.write('\n[ERROR] An Error has Occured While Trying to Reload Current Page.\n')
+        FA.close()
+        pass
 
 def accountIssue(browser: WebDriver):
     global ACCOUNTISSUE
@@ -120,7 +136,7 @@ def protectAcc(browser: WebDriver):
                 prYellow('[INFO] Please Verify Account... Then Press Any Key To Continue!')
                 input()
             else:
-                PROTECTISSUE= True
+                PROTECTISSUE = True
             pass
         elif protect.startswith('Aidez-nous à protéger') :
             prRed('\n[WARNING] [FATAL ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account !\n')
@@ -131,9 +147,32 @@ def protectAcc(browser: WebDriver):
                 prYellow('[INFO] Please Verify Account... Then Press Any Key To Continue!')
                 input()
             else:
-                PROTECTISSUE= True
+                PROTECTISSUE = True
             pass
     except:
+        return
+
+def securityInfoCheck (browser: WebDriver):
+    global SECURITYCHECK #delete this line when automating feature
+    try :
+        securityCheck = str(browser.find_element(By.XPATH, '//*[@id="iPageTitle"]').get_attribute('innerHTML'))
+        prRed('\n[WARNING] [ERROR] '+ str(securityCheck) +' !\n')
+        if securityCheck.startswith('Is your security') :
+            #find xpath to click "looks good! to automate this feature"  #delete this line when automating feature
+            #browser.find_element(By.XPATH, '').click() #Needs "Looks Good" button xpath 
+            prRed('\n[WARNING] [ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account Security Info !\n') #delete this line when automating feature
+            writeErr()#delete this line when automating feature
+            FA.write('\n[WARNING] [ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account Security Info !\n') #delete this line when automating feature
+            FA.close()#delete this line when automating feature
+            SECURITYCHECK = True #delete this line when automating feature
+        elif securityCheck.startswith('Vos informations'):
+            #browser.find_element(By.XPATH, '').click() #Needs "Looks Good" xpath 
+            prRed('\n[WARNING] [ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account Security Info !\n') #delete this line when automating feature
+            writeErr()#delete this line when automating feature
+            FA.write('\n[WARNING] [ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account Security Info !\n') #delete this line when automating feature
+            FA.close()#delete this line when automating feature
+            SECURITYCHECK = True #delete this line when automating feature
+    except :
         return
 
 # Define login function
@@ -173,6 +212,10 @@ def login(browser: WebDriver, email: str, pwd: str, isMobile: bool = False):
             protectAcc(browser)
         if PROTECTISSUE == True:
             return
+        if not isMobile :
+            securityInfoCheck(browser)
+        if SECURITYCHECK == True : #delete this line when automating feature
+            return #delete this line when automating feature
         time.sleep(1)
         # Click Security Check
         print('[LOGIN]', 'Passing security checks...')
@@ -333,10 +376,18 @@ def checkBingLogin(browser: WebDriver, isMobile: bool = False):
 
 def waitUntilVisible(browser: WebDriver, by_: By, selector: str, time_to_wait: int):
     try :
+        pageNotWorking()
+    except: 
+        pass
+    try :
         time.sleep(2)
         WebDriverWait(browser, time_to_wait).until(ec.visibility_of_element_located((by_, selector)))
     except:
         try :
+            pageNotWorking()
+        except: 
+            pass
+        try:
             prYellow('[Info] Waiting 20 secs to ReTry waitUntilVisible')
             time.sleep(20)
             WebDriverWait(browser, time_to_wait).until(ec.visibility_of_element_located((by_, selector)))
@@ -854,7 +905,6 @@ def completeDailySetThisOrThat(browser: WebDriver, cardNumber: int):
             answer2Code = getAnswerCode(answerEncodeKey, answer2Title)
 
             correctAnswerCode = browser.execute_script("return _w.rewardsQuizRenderInfo.correctAnswer")
-
             if (answer1Code == correctAnswerCode):
                 answer1.click()
                 time.sleep(8)
@@ -977,9 +1027,11 @@ def completePunchCard(browser: WebDriver, url: str, childPromotions: dict):
                     time.sleep(8)
                     try :
                         browser.find_element(By.XPATH, '//*[@id="rqStartQuiz"]').click()
+                        time.sleep(1)
                     except :
                         pass
                     maxQuestions = browser.execute_script("return _w.rewardsQuizRenderInfo.maxQuestions")
+                    time.sleep(3)                  
                     try :
                         numberOfOptions = browser.execute_script("return _w.rewardsQuizRenderInfo.numberOfOptions")
                         for question in range(maxQuestions):
@@ -1005,6 +1057,8 @@ def completePunchCard(browser: WebDriver, url: str, childPromotions: dict):
                             time.sleep(3)
                     except :
                        pass
+                    time.sleep(2)
+                    browser.find_element(By.XPATH, '//*[@id="rqCloseBtn"]/div/img' ).click()#quit quiz
                     time.sleep(5)
                     browser.close()
                     time.sleep(2)
@@ -1508,7 +1562,6 @@ try:
             prRed('\n[WARNING] [FATAL ERROR] Check if '+ str(account['username']) +' is Locked, Suspended, or Banned.\n')
             ACCOUNTISSUE = False
             prRed('[INFO] '+ account['username'] + ' Was Skipped! No Points were earned!\n')
-            
             prYellow('********************' + account['username'] + '********************')
             prPurple('[INFO] ' + str(ACCOUNT_COUNTER)+'/' + str(len(ACCOUNTS)) + ' Accounts Completed ! ')
 
@@ -1584,6 +1637,7 @@ try:
             prPurple('[BING] Starting Desktop and Edge Bing Searches...')
             bingSearches(browser, remainingSearches)
             FIRST_RUN = False
+            remainingSearches = 0
             browser.quit()            
             if SEARCHESREMAINING == 0 :
                 printDateAndTime()
@@ -1634,6 +1688,7 @@ try:
                 prPurple('[BING] Starting Mobile Bing searches... ')
                 bingSearches(browser, remainingSearchesM, True)
                 FIRST_RUN_M = False
+                remainingSearchesM = 0
                 browser.quit()
                 if ACCOUNT_COUNTER == len(ACCOUNTS):
                     if SEARCHESREMAINING == 0 :
@@ -1700,23 +1755,6 @@ try:
             FA.write('\n[ERROR] An Error has Occured with First_run and First_runM SleepTimers.')
             FA.close()
             pass
-    try: #test
-        if remainingSearches > 0 :
-            prRed('[INFO] '+ str(len(ACCOUNTS)) +' Desktop  Searches Did Not Complete !')
-            writeErr()
-            FA.write('\n[INFO] '+ str(len(ACCOUNTS)) +' Desktop  Searches Did Not Complete !')
-            FA.close()
-        elif remainingSearchesM > 0 :
-            prRed('[INFO] '+ str(len(ACCOUNTS)) +' Mobile Searches Did Not Complete !')
-            writeErr()
-            FA.write('\n[INFO] '+ str(len(ACCOUNTS)) +' Mobile  Searches Did Not Complete !')
-            FA.close()
-    except:
-        prRed('[Error] An Error has Occured With Displaying Incomplete Desktop or Mobile Searches.')
-        writeErr()
-        FA.write('\n[Error] An Error has Occured With Displaying Incomplete Desktop or Mobile Searches.')
-        FA.close()
-        pass
 except OSError as err:
     prRed('\n[ERROR] OS error:', err,'\n')
     browser.quit()
@@ -1745,6 +1783,24 @@ finally :
         FA.close()
     except :
         pass
+    try: #test
+        if remainingSearches > 0 :
+            prRed('[INFO] '+ account['username'] +' Desktop Searches Did Not Complete !')
+            writeErr()
+            FA.write('\n[INFO] '+ account['username'] +' Desktop Searches Did Not Complete !')
+            FA.close()
+        elif remainingSearchesM > 0 :
+            prRed('[INFO] '+ account['username'] +' Mobile Searches Did Not Complete !')
+            writeErr()
+            FA.write('\n[INFO] '+ account['username'] +' Mobile Searches Did Not Complete !')
+            FA.close()
+    except:
+        prRed('[Error] An Error has Occured With Displaying Incomplete Desktop or Mobile Searches.')
+        writeErr()
+        FA.write('\n[Error] An Error has Occured With Displaying Incomplete Desktop or Mobile Searches.')
+        FA.close()
+        pass
+    
     TOTAL_TIME = time.time() - st
     prPurple('\n\n[INFO] MS Farmer Total Time Elapsed: ' + time.strftime("%H:%M:%S", time.gmtime(TOTAL_TIME)) + '\n')
     prYellow('[INFO] Thank you for using Microsoft Rewards Farmer ! ')
