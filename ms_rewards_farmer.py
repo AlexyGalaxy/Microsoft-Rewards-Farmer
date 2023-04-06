@@ -64,6 +64,7 @@ def browserSetup(headless_mode: bool = False, user_agent: str = PC_USER_AGENT) -
         if PROTECTACCPAUSE != True and HEADLESSOFF != True :
             if headless_mode : #comment out this line of code to disable headless mode (make window visable) 
                 options.add_argument("--headless") #comment out this line of code to disable headless mode (make window visable) 
+                options.add_argument('window-size=1920x1080')
         options.add_argument('log-level=3')
         chrome_browser_obj = webdriver.Chrome(options=options)
         if SECONDMONITER == True :
