@@ -79,6 +79,7 @@ def browserSetup(headless_mode: bool = False, user_agent: str = PC_USER_AGENT) -
         return chrome_browser_obj
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
         prRed('\n[ERROR] An Error has Occured While Trying to Complete Browser Setup.\n')
         writeErr()
         FA.write('\n[ERROR] An Error has Occured While Trying to Complete Browser Setup.\n')
