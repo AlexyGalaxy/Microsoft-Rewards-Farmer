@@ -4,7 +4,6 @@ from datetime import date, timedelta, datetime
 import requests
 import random
 import urllib.parse
-import ipapi
 import os
 import os.path
 from os import path
@@ -17,8 +16,8 @@ from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, TimeoutException, ElementNotInteractableException, UnexpectedAlertPresentException, NoAlertPresentException
 
 # Define user-agents
-#rewardsErr ='C://Users//YourNameHere//Desktop//Microsoft.Rewards.Err.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsErr
-#rewardsLog = 'C://Users//YourNameHere//Desktop//Microsoft.Rewards.Log.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsLog 
+rewardsErr ='/home/rakosi2/Microsoft-Rewards-Farmer/Microsoft.Rewards.Err.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsErr
+rewardsLog = '/home/rakosi2/Microsoft-Rewards-Farmer/Microsoft.Rewards.Log.txt' #change YourNameHere to your pc's Username and delete the # infront of rewardsLog
 PC_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.183 Safari/537.36 Edg/86.0.622.63'
 MOBILE_USER_AGENT = 'Mozilla/5.0 (Linux; Android 10; Pixel 3) zAppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0. 3945.79 Mobile Safari/537.36'
 PROTECTACCPAUSE = False #Set this variable to True to pause the script when you need to verify Account infomation. ("Help us protect Your Account")
@@ -56,34 +55,45 @@ def browserSetup(headless_mode: bool = False, user_agent: str = PC_USER_AGENT) -
     global HEADLESSOFF
     global SECONDMONITER
     try :
+        from pyvirtualdisplay import Display
+        display = Display(visible=0, size=(1024, 768))
+        display.start()
         # Create Chrome browser
         from selenium.webdriver.chrome.options import Options
         options = Options()
         options.add_argument("user-agent=" + user_agent)
         options.add_argument('lang=' + LANG.split("-")[0])
         if PROTECTACCPAUSE != True and HEADLESSOFF != True :
-            if headless_mode : #comment out this line of code to disable headless mode (make window visable) 
-                options.add_argument("--headless") #comment out this line of code to disable headless mode (make window visable) 
+            if headless_mode : #comment out this line of code to disable headless mode (make window visable)
+                options.add_argument("--headless") #comment out this line of code to disable headless mode (make window visable)
+                options.add_argument('window-size=1024,768')
+                options.add_argument('--no-sandbox') # Bypass OS security model
+                options.add_argument('--disable-gpu')  # applicable to windows os only
+                options.add_argument('start-maximized') #
+                options.add_argument('disable-infobars')
+                options.add_argument("--disable-extensions")
         options.add_argument('log-level=3')
         chrome_browser_obj = webdriver.Chrome(options=options)
         if SECONDMONITER == True :
             chrome_browser_obj.set_window_position(4000, 0) #if you cannot see the browser on your screen lower the value 4000
         return chrome_browser_obj
-    except:
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
         prRed('\n[ERROR] An Error has Occured While Trying to Complete Browser Setup.\n')
         writeErr()
         FA.write('\n[ERROR] An Error has Occured While Trying to Complete Browser Setup.\n')
         FA.close()
 
 def pageNotWorking(browser: WebDriver) :
-    localRefresh = 0 
+    localRefresh = 0
     try :
         noLoad = str(browser.find_element(By.XPATH, '//*[@id="main-message"]/h1/span').get_attribute('innerHTML'))
         time.sleep(2)
         if noLoad.startswith('This page isn'):
             prRed('[INFO] Could Not Load Page.')
             try:
-                while noLoad.startswith('This page'):    
+                while noLoad.startswith('This page'):
                     localRefresh = localRefresh+1
                     prYellow('[INFO] Refreshing Now... REFRESH # ' + str(localRefresh))
                     try:
@@ -103,7 +113,7 @@ def pageNotWorking(browser: WebDriver) :
                 writeErr()
                 FA.write('\n[ERROR] An Error Has Occured While Trying to Reload the Current Page !\n') #delete this line when automating feature
                 FA.close()
-        elif noLoad.startswith('Cette page ne fonctionne pas'): 
+        elif noLoad.startswith('Cette page ne fonctionne pas'):
             prRed('[INFO] Could Not Load Page.')
             try :
                 while noLoad.startswith('Cette page ne fonctionne pas'):
@@ -169,7 +179,7 @@ def accountIssue(browser: WebDriver):
             pass
     except:
         return
-    
+
 def protectAcc(browser: WebDriver):
     global PROTECTISSUE
     global PROTECTACCPAUSE
@@ -222,7 +232,7 @@ def securityInfoCheck (browser: WebDriver):
                 FA.close()#delete this line when automating feature
                 pass
             #find xpath to click "looks good!" to automate this feature  #delete this line when automating feature
-            #browser.find_element(By.XPATH, '').click() #Needs "Looks Good" button xpath 
+            #browser.find_element(By.XPATH, '').click() #Needs "Looks Good" button xpath
             SECURITYCHECK = True #delete this line when automating feature
         elif securityCheck.startswith('Vos informations'):
             try :
@@ -239,7 +249,7 @@ def securityInfoCheck (browser: WebDriver):
                 FA.write('\n[WARNING] [ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account Security Info !\n') #delete this line when automating feature
                 FA.close()#delete this line when automating feature
                 pass
-            #browser.find_element(By.XPATH, '').click() #Needs "Looks Good" xpath 
+            #browser.find_element(By.XPATH, '').click() #Needs "Looks Good" xpath
             SECURITYCHECK = True #delete this line when automating feature
     except :
         return
@@ -347,14 +357,14 @@ def login(browser: WebDriver, email: str, pwd: str, isMobile: bool = False):
         # Check Login
         print('[LOGIN]', 'Ensuring login on Bing...')
         time.sleep(random.randint(4, 6))
-        try: 
+        try:
             checkBingLogin(browser, isMobile)
         except:
             prRed('[ERROR] An Error has Occured While Ensuring login on Bing...')
             writeErr()
             FA.write('[ERROR] An Error has Occured While Ensuring login on Bing...')
             FA.close()
-            pass        
+            pass
     except OSError as err:
         prRed('\n[ERROR] A Login Error has Occured.\n')
         prRed('\n[ERROR] OS error:', err,'\n')
@@ -432,9 +442,9 @@ def checkBingLogin(browser: WebDriver, isMobile: bool = False):
         time.sleep(5)
         pageNotWorking(browser)
         try:
-            browser.find_element(By.ID, 'id_p').click() 
+            browser.find_element(By.ID, 'id_p').click()
             time.sleep(2)
-            browser.find_element(By.ID, 'id_p').click() 
+            browser.find_element(By.ID, 'id_p').click()
         except:
             pass
     try :
@@ -476,7 +486,7 @@ def waitUntilVisible(browser: WebDriver, by_: By, selector: str, time_to_wait: i
             time.sleep(5)
             try :
                 pageNotWorking(browser)
-            except: 
+            except:
                 prRed('\n[ERROR] An Error has Occured While Trying to Reload Current Page while wait until visible.\n')
                 writeErr()
                 FA.write('\n[ERROR] An Error has Occured While Trying to Reload Current Page while wait until visible.\n')
@@ -561,10 +571,10 @@ def waitUntilQuizLoads(browser: WebDriver):
         prRed('\n[ERROR] An Error has Occured While Trying to Wait Until Quiz Loads.\n')
         writeErr()
         FA.write('\n[ERROR] An Error has Occured While Trying to Wait Until Quiz Loads.')
-        FA.close() 
+        FA.close()
 
 def findBetween(s: str, first: str, last: str) -> str:
-    try : 
+    try :
         try :
             start = s.index(first) + len(first)
             end = s.index(last, start)
@@ -580,7 +590,7 @@ def findBetween(s: str, first: str, last: str) -> str:
 def getCCodeLangAndOffset() -> tuple:
     try :
         try :
-            nfo = ipapi.location()
+            nfo = get_ipython().location()
             lang = nfo['languages'].split(',')[0]
             geo = nfo['country']
             tz = str(round(int(nfo['utc_offset']) / 100 * 60))
@@ -710,12 +720,12 @@ def bingSearches(browser: WebDriver, numberOfSearches: int, isMobile: bool = Fal
             else:
                 break
             SEARCHESREMAINING = SEARCHESREMAINING-1
-        if isMobile: 
+        if isMobile:
             TOTALMOBILETIMER = time.time() - timeMobileTotalSt
             prYellow('[INFO] Mobile Search Total Time Elapsed: ' + time.strftime("%H:%M:%S", time.gmtime(TOTALMOBILETIMER)))
         else:
             TIMETOTAL = time.time()-totalTimerSt
-            prYellow('[INFO] PC Search Total Time Elapsed: ' + time.strftime("%H:%M:%S", time.gmtime(TIMETOTAL)))   
+            prYellow('[INFO] PC Search Total Time Elapsed: ' + time.strftime("%H:%M:%S", time.gmtime(TIMETOTAL)))
     except OSError as err:
         prRed('\n[ERROR] OS error:', err,'\n')
         writeErr()
@@ -930,7 +940,7 @@ def completeDailySetVariableActivity(browser: WebDriver, cardNumber: int):
             waitUntilVisible(browser, By.XPATH, '//*[@id="currentQuestionContainer"]/div/div[1]', 3)
         except (NoSuchElementException, TimeoutException):
             counter = str(browser.find_element(By.XPATH, '//*[@id="QuestionPane0"]/div[2]').get_attribute('innerHTML'))[:-1][1:]
-            numberOfQuestions = max([int(s) for s in counter.split() if s.isdigit()])          
+            numberOfQuestions = max([int(s) for s in counter.split() if s.isdigit()])
             try :
                 counter = str(browser.find_element(By.XPATH, '//*[@id="QuestionPane0"]/div[2]').get_attribute('innerHTML'))[:-1][1:]
                 numberOfQuestions = (counter.split(" of ")[1])
@@ -1128,7 +1138,7 @@ def completeDailySet(browser: WebDriver):
         time.sleep(2)
         browser.switch_to.window(window_name = browser.window_handles[0])
         time.sleep(2)
-           
+
 def getAccountPoints(browser: WebDriver) -> int:
     try :
         pageNotWorking(browser)
@@ -1169,7 +1179,7 @@ def completePunchCard(browser: WebDriver, url: str, childPromotions: dict):
                     except :
                         maxQuestions = 20
                         pass
-                    time.sleep(3)                  
+                    time.sleep(3)
                     try :
                         numberOfOptions = browser.execute_script("return _w.rewardsQuizRenderInfo.numberOfOptions")
                     except :
@@ -1194,7 +1204,7 @@ def completePunchCard(browser: WebDriver, url: str, childPromotions: dict):
                         pass
                     try: #backup code
                         counter = str(browser.find_element(By.XPATH, '//*[@id="QuestionPane0"]/div[2]').get_attribute('innerHTML'))[:-1][1:]
-                        numberOfQuestions = max([int(s) for s in counter.split() if s.isdigit()])                         
+                        numberOfQuestions = max([int(s) for s in counter.split() if s.isdigit()])
                         for question in range(numberOfQuestions):
                             browser.execute_script('document.evaluate("//*[@id=\'QuestionPane' + str(question) + '\']/div[1]/div[2]/a[' + str(random.randint(1, 3)) + ']/div", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()')
                             time.sleep(5)
@@ -1353,7 +1363,7 @@ def completeMorePromotionABC(browser: WebDriver, cardNumber: int):
         for question in range(int(numberOfQuestions)):
             browser.execute_script('document.evaluate("//*[@id=\'QuestionPane' + str(question) + '\']/div[1]/div[2]/a[' + str(random.randint(1, 3)) + ']/div", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue.click()')
             time.sleep(5)
-            try:   
+            try:
                 browser.find_element(By.XPATH, '//*[@id="AnswerPane' + str(question) + '"]/div[1]/div[2]/div[4]/a/div/span/input').click()
                 time.sleep(2)
             except:
@@ -1450,7 +1460,7 @@ def completeMorePromotions(browser: WebDriver):
                             completeMorePromotionSearch(browser, i)
             except:
                 resetTabs(browser)
-        resetTabs(browser) 
+        resetTabs(browser)
     except:
         prRed('\n[ERROR] An Error has Occured While Trying to Complete More Promotions.\n')
         writeErr()
@@ -1672,7 +1682,7 @@ def prYellow(prt):
 st = time.time()
 
 prRed("""
-███╗   ███╗███████╗    ███████╗ █████╗ ██████╗ ███╗   ███╗███████╗██████╗ 
+███╗   ███╗███████╗    ███████╗ █████╗ ██████╗ ███╗   ███╗███████╗██████╗
 ████╗ ████║██╔════╝    ██╔════╝██╔══██╗██╔══██╗████╗ ████║██╔════╝██╔══██╗
 ██╔████╔██║███████╗    █████╗  ███████║██████╔╝██╔████╔██║█████╗  ██████╔╝
 ██║╚██╔╝██║╚════██║    ██╔══╝  ██╔══██║██╔══██╗██║╚██╔╝██║██╔══╝  ██╔══██╗
@@ -1722,7 +1732,7 @@ try:
         browser = browserSetup(True, PC_USER_AGENT)
         prGreen('[LOGIN] Logging-in as ' + account['username'] + ' !')
         login(browser, account['username'], account['password'])
-        
+
         if ACCOUNTISSUE == True :
             browser.quit()
             prRed('\n[WARNING] [FATAL ERROR] Check if '+ str(account['username']) +' is Locked, Suspended, or Banned.\n')
@@ -1738,7 +1748,7 @@ try:
             else :
                 prYellow('[INFO] Waiting ' + str(sleepTimer) + 'seconds Until Continuing... \n')
                 time.sleep(sleepTimer)
-            continue 
+            continue
         if PROTECTISSUE == True :
             browser.quit()
             prRed('\n[WARNING] [FATAL ERROR] You need to manually sign in to ' + account['username'] + ' to verify the account !\n')
@@ -1753,7 +1763,7 @@ try:
             else :
                 prYellow('[INFO] Waiting ' + str(sleepTimer) + 'seconds Until Continuing... \n')
                 time.sleep(sleepTimer)
-            continue 
+            continue
         prGreen('[LOGIN] Logged-in Successfully !')
         startingPoints = POINTS_COUNTER
         prGreen('[POINTS] You have ' + str(POINTS_COUNTER) + ' points on your account !')
@@ -1806,7 +1816,7 @@ try:
             bingSearches(browser, remainingSearches)
             FIRST_RUN = False
             SEARCHCOMPLETE = True
-            browser.quit()            
+            browser.quit()
             if SEARCHESREMAINING == 0 :
                 printDateAndTime()
                 prGreen('[BING] Finished Desktop and Edge Bing searches '+str(ACCOUNT_COUNTER) + '/'+str(len(ACCOUNTS)) + ' ! ')
@@ -1821,7 +1831,7 @@ try:
                 FA.close()
                 prYellow('[INFO] There are ' + str(SEARCHESREMAINING) +' Searches Remaining !')
                 prYellow('[INFO] Waiting ' + str(sleepTimer) + 'seconds Until Continuing... \n')
-                time.sleep(sleepTimer)    
+                time.sleep(sleepTimer)
         else :
             browser.quit()
             prRed('\n[ERROR] '+ str(account['username']) + ' Has Already Earned All Desktop Points Available Today.\n')
@@ -1831,7 +1841,7 @@ try:
             FA.close()
             prYellow('\n[INFO] Waiting ' + str(longSleepTimer) +'seconds Until Continuing... \n')
             time.sleep(longSleepTimer)
-        try: 
+        try:
             if remainingSearchesM != 0 :
                 printDateAndTime()
                 prPurple('[INFO] Starting '+ str(account['username']) +' Mobile Account ' + str(ACCOUNT_COUNTER) + '/'+str(len(ACCOUNTS)) + ' ! ')
@@ -1864,7 +1874,7 @@ try:
                         printDateAndTime()
                         prGreen('[BING] Finished Mobile Bing searches '+str(ACCOUNT_COUNTER) + '/'+str(len(ACCOUNTS)) + ' ! ')
                         prPurple('[INFO] ' + str(account['username']) + ' Has Earned All Mobile Points Today !\n')
-                else:                
+                else:
                     if SEARCHESREMAINING == 0 :
                         printDateAndTime()
                         prGreen('[BING] Finished Mobile Bing searches '+str(ACCOUNT_COUNTER) + '/'+str(len(ACCOUNTS)) + ' ! ')
@@ -1905,7 +1915,7 @@ try:
             prRed('\n[ERROR] An Error has Occured When Trying to Create or Write to .txt .\n')
             pass
         prGreen('[POINTS] You have earned ' + str(POINTS_COUNTER - startingPoints) + ' points today !')
-        prGreen('[POINTS] You are now at ' + str(POINTS_COUNTER) + ' points !\n') 
+        prGreen('[POINTS] You are now at ' + str(POINTS_COUNTER) + ' points !\n')
         prYellow('********************' + account['username'] + '********************')
         prPurple('[INFO] ' + str(ACCOUNT_COUNTER)+'/' + str(len(ACCOUNTS)) + ' Accounts Completed ! ')
         TIMETOTAL = time.time()-pcMobileTimerTotal
@@ -1971,10 +1981,10 @@ finally :
         FA.write('\n[Error] An Error has Occured With Displaying Incomplete Desktop or Mobile Searches.')
         FA.close()
         pass
-    
+
     TOTAL_TIME = time.time() - st
     prPurple('\n\n[INFO] MS Farmer Total Time Elapsed: ' + time.strftime("%H:%M:%S", time.gmtime(TOTAL_TIME)) + '\n')
     prYellow('[INFO] Thank you for using Microsoft Rewards Farmer ! ')
     prYellow('[INFO] Press Any Key to Exit !')
-    input() #comment out or delete this line to auto exit when complete. ([WARNING] You will not see errors without this line !)
+#    input() #comment out or delete this line to auto exit when complete. ([WARNING] You will not see errors without this line !)
     prPurple('[INFO] Have a Good Day! GoodBye :)\n')
