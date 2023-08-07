@@ -61,6 +61,7 @@ def browserSetup(headless_mode: bool = False, user_agent: str = PC_USER_AGENT) -
         options = Options()
         options.add_argument("user-agent=" + user_agent)
         options.add_argument('lang=' + LANG.split("-")[0])
+        options.add_argument('--disable-dev-shm-usage')
         if PROTECTACCPAUSE != True and HEADLESSOFF != True :
             if headless_mode : #comment out this line of code to disable headless mode (make window visable) 
                 options.add_argument("--headless") #comment out this line of code to disable headless mode (make window visable) 
